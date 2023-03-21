@@ -1272,6 +1272,7 @@ namespace {
                           bool AllowInjectedClassName = false);
 
     const LoopHintAttr *TransformLoopHintAttr(const LoopHintAttr *LH);
+<<<<<<< HEAD
     const SYCLIntelIVDepAttr *
     TransformSYCLIntelIVDepAttr(const SYCLIntelIVDepAttr *IV);
     const SYCLIntelInitiationIntervalAttr *
@@ -1295,6 +1296,14 @@ namespace {
     const SYCLIntelMaxReinvocationDelayAttr *
     TransformSYCLIntelMaxReinvocationDelayAttr(
         const SYCLIntelMaxReinvocationDelayAttr *MRD);
+=======
+    const NoInlineAttr *TransformStmtNoInlineAttr(const Stmt *OrigS,
+                                                  const Stmt *InstS,
+                                                  const NoInlineAttr *A);
+    const AlwaysInlineAttr *
+    TransformStmtAlwaysInlineAttr(const Stmt *OrigS, const Stmt *InstS,
+                                  const AlwaysInlineAttr *A);
+>>>>>>> 514e4359a543ea778c7fee6908a9c6eb10d0ccd9
 
     ExprResult TransformPredefinedExpr(PredefinedExpr *E);
     ExprResult TransformDeclRefExpr(DeclRefExpr *E);
@@ -1366,7 +1375,7 @@ namespace {
 
       CXXMethodDecl *MD = Result.getAs<LambdaExpr>()->getCallOperator();
       for (ParmVarDecl *PVD : MD->parameters()) {
-        if (!PVD->hasDefaultArg())
+        if (!PVD || !PVD->hasDefaultArg())
           continue;
         Expr *UninstExpr = PVD->getUninstantiatedDefaultArg();
         // FIXME: Obtain the source location for the '=' token.
@@ -1789,6 +1798,20 @@ TemplateInstantiator::TransformLoopHintAttr(const LoopHintAttr *LH) {
   // non-type template parameter.
   return LoopHintAttr::CreateImplicit(getSema().Context, LH->getOption(),
                                       LH->getState(), TransformedExpr, *LH);
+}
+const NoInlineAttr *TemplateInstantiator::TransformStmtNoInlineAttr(
+    const Stmt *OrigS, const Stmt *InstS, const NoInlineAttr *A) {
+  if (!A || getSema().CheckNoInlineAttr(OrigS, InstS, *A))
+    return nullptr;
+
+  return A;
+}
+const AlwaysInlineAttr *TemplateInstantiator::TransformStmtAlwaysInlineAttr(
+    const Stmt *OrigS, const Stmt *InstS, const AlwaysInlineAttr *A) {
+  if (!A || getSema().CheckAlwaysInlineAttr(OrigS, InstS, *A))
+    return nullptr;
+
+  return A;
 }
 
 const SYCLIntelIVDepAttr *
